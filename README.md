@@ -4,7 +4,7 @@ G for GPU/CPU runtime change
 
 F for filters runtime change 
 
-+ and -  for zoom in/out
+plus and minus on keyboard for zoom in/out
 
 left mouse click move left/right
 
