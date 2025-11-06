@@ -12,16 +12,19 @@ using namespace std;
 using namespace cv;
 using Clock = std::chrono::steady_clock;
 
+// Reads a whole text file into a string (used for loading shader sources).
 static string readText(const string& path) {
     ifstream f(path, ios::in | ios::binary);
     if (!f) throw runtime_error("Cannot open file: " + path);
     return { istreambuf_iterator<char>(f), istreambuf_iterator<char>() };
 }
 
+// Simple GLFW error callback that prints errors to stderr.
 static void glfwErrorCb(int code, const char* desc) {
     cerr << "[GLFW] (" << code << ") " << desc << endl;
 }
 
+// Compiles a single GLSL shader and throws if compilation fails.
 static GLuint compile(GLenum type, const string& src) {
     GLuint sh = glCreateShader(type);
     const char* s = src.c_str();
@@ -36,6 +39,7 @@ static GLuint compile(GLenum type, const string& src) {
     return sh;
 }
 
+// Links a vertex + fragment shader into a program, with error reporting.
 static GLuint link(GLuint vs, GLuint fs) {
     GLuint p = glCreateProgram();
     glAttachShader(p, vs); glAttachShader(p, fs); glLinkProgram(p);
@@ -104,6 +108,7 @@ struct XformState {
     bool draggingRotate = false;
 };
 
+// Builds a 3x3 pixel-space affine matrix that applies pan/zoom/rotation around the image center.
 static void buildAffinePixels(const XformState& xf, int W, int H, float M[9]) {
     float cx = 0.5f * W, cy = 0.5f * H;
     float c = cosf(xf.angle), s = sinf(xf.angle);
@@ -123,6 +128,7 @@ static void buildAffinePixels(const XformState& xf, int W, int H, float M[9]) {
     memcpy(M, m, sizeof(m));
 }
 
+// Converts the pixel-space matrix into normalized UV space so the shader can sample the texture.
 static void affinePixelsToUV(const float M[9], int W, int H, float N[9]) {
     auto mul3 = [](const float A[9], const float B[9], float R[9]) {
         for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c)
@@ -133,6 +139,7 @@ static void affinePixelsToUV(const float M[9], int W, int H, float N[9]) {
     float tmp[9]; mul3(M, S2, tmp); mul3(S1, tmp, N);
 }
 
+// Helper to convert our 3x3 matrix into OpenCV’s 2x3 format for warpAffine on the CPU path.
 static cv::Matx23f toCv2x3(const float M[9]) {
     return cv::Matx23f(M[0], M[1], M[2],
         M[3], M[4], M[5]);
@@ -166,7 +173,7 @@ int main(int argc, char** argv) try {
     glfwSwapInterval(0);  // disable vsync
 
 
-    // --- GLEW (must be after context) ---
+    // --- GLEW  ---
     glewExperimental = GL_TRUE;
     GLenum glewErr = glewInit();
     glGetError(); // clear benign GL error
@@ -263,7 +270,7 @@ int main(int argc, char** argv) try {
             xf.angle += dx * 0.01f;
             xf.lastX = mx; xf.lastY = my;
         }
-        // Zoom with +/- keys (simple)
+        // Zoom with +/- keys 
         if (glfwGetKey(win, GLFW_KEY_EQUAL) == GLFW_PRESS) { xf.scale *= 1.05f; }
         if (glfwGetKey(win, GLFW_KEY_MINUS) == GLFW_PRESS) { xf.scale /= 1.05f; }
         xf.scale = std::clamp(xf.scale, 0.1f, 10.0f);

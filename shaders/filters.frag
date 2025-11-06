@@ -8,7 +8,6 @@ uniform vec2  uTexSize;
 uniform float uBlock;
 uniform float uEdgeThresh;
 
-// IMPORTANT: we will upload column-major with GL_FALSE
 uniform mat3  uAffine;
 
 float luminance(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
