@@ -12,9 +12,6 @@ add_executable(MyProject src/main.cpp)
 target_link_libraries(MyProject PRIVATE ${OpenCV_LIBS} glfw GLEW::GLEW)
 target_include_directories(MyProject PRIVATE ${OpenCV_INCLUDE_DIRS})
 
-# If you built vcpkg with the *static* triplet (x64-windows-static), also:
-# target_compile_definitions(MyProject PRIVATE GLEW_STATIC)
-
 # ---- Runtime assets: copy shaders to the binary dir (Debug/Release) ----
 add_custom_command(TARGET MyProject POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:MyProject>/shaders"
